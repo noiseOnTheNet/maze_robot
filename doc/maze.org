@@ -1,0 +1,4 @@
+#+title:Maze
+
+https://en.wikipedia.org/wiki/Maze_generation_algorithm
+Wilson algo
