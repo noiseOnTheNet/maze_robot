@@ -146,6 +146,8 @@ class Maze:
         maze.__random()
         return maze
 
+def create_maze(rows: int=10, cols: int =10, seed=None):
+    return Maze.kruskal(rows, cols, seed)
 
 class Robot:
     def __init__(self, maze=Maze.kruskal(), edge: int = 20, padding: int=50):
