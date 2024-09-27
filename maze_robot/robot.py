@@ -1,6 +1,18 @@
 import tkinter as tk
 import random
 from dataclasses import dataclass
+from enum import Enum
+
+class Direction(Enum):
+    N = 0
+    E = 1
+    S = 2
+    W = 3
+
+N = Direction.N
+E = Direction.E
+S = Direction.S
+W = Direction.W
 
 def bit(x: int):
     while x:
@@ -49,19 +61,26 @@ class HWall:
         hwalls[self.x] = hwalls[self.x] ^ (1 << (self.y + 1))
         return (hwalls, vwalls)
 
-class Robot:
-    def __init__(self, rows: int=10, cols: int =10, edge: int = 20, padding: int=50):
+class Maze:
+    def __init__(self, rows: int=10, cols: int =10):
         self.rows = rows
         self.cols = cols
-        self.edge = edge
-        self.padding = padding
-        width = padding * 2 + cols * edge
-        height = padding * 2 + rows *edge
-        self.root = tk.Tk()
-        self.canvas = tk.Canvas(self.root,width=width,height=height)
-        self.canvas.pack()
 
-    def random(self):
+    def get_walls(self, x, y):
+        result = []
+        if self.vwalls[y] & (1 << x):
+            result.append(Direction.W)
+        if self.vwalls[y] & (1 << (x + 1)):
+            result.append(Direction.E)
+        if self.hwalls[x] & (1 << y):
+            result.append(Direction.N)
+        if self.hwalls[x] & (1 << (y + 1)):
+            result.append(Direction.S)
+        return set(result)
+
+    def __random(self, seed=None):
+        if seed is not None:
+            random.seed(seed)
         maxv = 2 ** (self.rows - 1) - 1
         maxh = 2 ** (self.cols - 1) - 1
         left_wall = 2 ** self.cols
@@ -71,7 +90,7 @@ class Robot:
         self.vwalls = [(random.randint(0,maxh) << 1) + left_wall + right_wall for _ in range(self.rows)]
         self.hwalls = [(random.randint(0,maxv) << 1) + top_wall + bottom_wall for _ in range(self.cols)]
 
-    def kruskal(self, seed=None):
+    def __kruskal(self, seed=None):
         if seed is not None:
             random.seed(seed)
 
@@ -95,7 +114,6 @@ class Robot:
         random.shuffle(walls)
 
         for j,wall in enumerate(walls):
-            self.plot()
             # stop if all connected
             if len(universe) == 1:
                 break
@@ -114,20 +132,88 @@ class Robot:
             universe = universe - {set_a, set_b}
             universe = universe | {set_a | set_b}
 
+    @classmethod
+    def kruskal(cls, rows: int=10, cols: int =10, seed=None):
+        maze = cls(rows, cols)
+        maze.__kruskal(seed)
+        return maze
+
+
+    def random(cls, rows: int=10, cols: int =10, seed=None):
+        maze = cls(rows, cols)
+        maze.__random(seed)
+        return maze
+
+
+class Robot:
+    def __init__(self, maze=Maze.kruskal(), edge: int = 20, padding: int=50):
+        self.maze= maze
+        self.edge = edge
+        self.padding = padding
+        self.width = padding * 2 + self.maze.cols * edge
+        self.height = padding * 2 + self.maze.rows *edge
+        self.__x = 0
+        self.__y = 0
+        self.root = None
+        self.canvas = None
+
+    @property
+    def position(self):
+        return (self.__x, self.__y)
+
+    def view(self):
+        self.root = tk.Tk()
+        self.canvas = tk.Canvas(self.root,width=self.width,height=self.height)
+        self.canvas.pack()
+        self.plot()
 
     def plot(self):
+        if self.canvas is None:
+            return
         self.canvas.delete(tk.ALL)
-        for row,walls in enumerate(self.vwalls):
+        for row,walls in enumerate(self.maze.vwalls):
             for col,wall in enumerate(bit(walls)):
                 if wall:
                     x = self.padding + self.edge * col
                     y1 = self.padding + self.edge * row
                     y2 = self.padding + self.edge * (row + 1)
                     self.canvas.create_line(x, y1, x, y2)
-        for col,walls in enumerate(self.hwalls):
+        for col,walls in enumerate(self.maze.hwalls):
             for row,wall in enumerate(bit(walls)):
                 if wall:
                     x1 = self.padding + self.edge * col
                     x2 = self.padding + self.edge * (col + 1)
                     y = self.padding + self.edge * row
                     self.canvas.create_line(x1, y, x2, y)
+
+        x1 = self.padding + self.edge * self.__x
+        x2 = self.padding + self.edge * (self.__x + 1)
+        y1 = self.padding + self.edge * self.__y
+        y2 = self.padding + self.edge * (self.__y + 1)
+        self.robot_tag = self.canvas.create_oval([x1,y1,x2,y2], fill="blue")
+
+    @property
+    def walls(self):
+        return self.maze.get_walls(self.__x, self.__y)
+
+    def move(self, dirx: Direction):
+        if dirx in self.walls:
+            return False
+        offset_x = 0
+        offset_y = 0
+        match dirx:
+            case Direction.N:
+                self.__y = self.__y - 1
+                offset_y = self.edge * -1
+            case Direction.S:
+                self.__y = self.__y + 1
+                offset_y = self.edge
+            case Direction.W:
+                self.__x = self.__x - 1
+                offset_x = self.edge * -1
+            case Direction.E:
+                self.__x = self.__x + 1
+                offset_x = self.edge
+        if self.canvas is not None:
+            self.canvas.move(self.robot_tag, offset_x, offset_y)
+        return True
