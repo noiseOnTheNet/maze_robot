@@ -62,9 +62,16 @@ class HWall:
         return (hwalls, vwalls)
 
 class Maze:
-    def __init__(self, rows: int=10, cols: int =10):
+    def __init__(self, rows: int=10, cols: int =10, seed: int | None =None):
         self.rows = rows
         self.cols = cols
+        if seed is not None:
+            random.seed(seed)
+        self.__target = (random.randint(0,cols), random.randint(0,rows))
+
+    @property
+    def target(self):
+        return self.__target
 
     def get_walls(self, x, y):
         result = []
@@ -78,9 +85,7 @@ class Maze:
             result.append(Direction.S)
         return set(result)
 
-    def __random(self, seed=None):
-        if seed is not None:
-            random.seed(seed)
+    def __random(self):
         maxv = 2 ** (self.rows - 1) - 1
         maxh = 2 ** (self.cols - 1) - 1
         left_wall = 2 ** self.cols
@@ -90,10 +95,7 @@ class Maze:
         self.vwalls = [(random.randint(0,maxh) << 1) + left_wall + right_wall for _ in range(self.rows)]
         self.hwalls = [(random.randint(0,maxv) << 1) + top_wall + bottom_wall for _ in range(self.cols)]
 
-    def __kruskal(self, seed=None):
-        if seed is not None:
-            random.seed(seed)
-
+    def __kruskal(self):
         # all walls
         self.vwalls = [2 ** (self.cols + 1) - 1 for _ in range(self.rows)]
         self.hwalls = [2 ** (self.rows + 1) - 1 for _ in range(self.cols)]
@@ -134,14 +136,14 @@ class Maze:
 
     @classmethod
     def kruskal(cls, rows: int=10, cols: int =10, seed=None):
-        maze = cls(rows, cols)
-        maze.__kruskal(seed)
+        maze = cls(rows, cols, seed)
+        maze.__kruskal()
         return maze
 
 
     def random(cls, rows: int=10, cols: int =10, seed=None):
-        maze = cls(rows, cols)
-        maze.__random(seed)
+        maze = cls(rows, cols, seed)
+        maze.__random()
         return maze
 
 
@@ -156,6 +158,17 @@ class Robot:
         self.__y = 0
         self.root = None
         self.canvas = None
+        self.__pen_down = False
+
+    def down_pen(self):
+        self.__pen_down = True
+
+    def up_pen(self):
+        self.__pen_down = False
+
+    @property
+    def pen_down(self):
+        return self.__pen_down
 
     @property
     def position(self):
@@ -166,6 +179,19 @@ class Robot:
         self.canvas = tk.Canvas(self.root,width=self.width,height=self.height)
         self.canvas.pack()
         self.plot()
+
+    def __reticle_to_pixel_bbox(self, x, y, padding = 0):
+        x1 = self.padding + self.edge * x + padding
+        x2 = self.padding + self.edge * (x + 1) - padding
+        y1 = self.padding + self.edge * y + padding
+        y2 = self.padding + self.edge * (y + 1) - padding
+        return (x1,y1,x2,y2)
+
+    def __reticle_to_center(self, x, y):
+        return (
+            self.padding + self.edge * (x + .5),
+            self.padding + self.edge * (y + .5)
+        )
 
     def plot(self):
         if self.canvas is None:
@@ -186,11 +212,11 @@ class Robot:
                     y = self.padding + self.edge * row
                     self.canvas.create_line(x1, y, x2, y)
 
-        x1 = self.padding + self.edge * self.__x
-        x2 = self.padding + self.edge * (self.__x + 1)
-        y1 = self.padding + self.edge * self.__y
-        y2 = self.padding + self.edge * (self.__y + 1)
-        self.robot_tag = self.canvas.create_oval([x1,y1,x2,y2], fill="blue")
+        bbox = self.__reticle_to_pixel_bbox(self.__x, self.__y, padding=1)
+        self.robot_tag = self.canvas.create_oval(bbox, fill="blue")
+
+        bbox = self.__reticle_to_pixel_bbox(*self.maze.target, padding=2)
+        self.canvas.create_rectangle(bbox, fill="green")
 
     @property
     def walls(self):
@@ -201,6 +227,7 @@ class Robot:
             return False
         offset_x = 0
         offset_y = 0
+        old_position = (self.__x, self.__y)
         match dirx:
             case Direction.N:
                 self.__y = self.__y - 1
@@ -216,4 +243,10 @@ class Robot:
                 offset_x = self.edge
         if self.canvas is not None:
             self.canvas.move(self.robot_tag, offset_x, offset_y)
+            if self.__pen_down:
+                line = self.__reticle_to_center(*old_position) + self.__reticle_to_center(self.__x, self.__y)
+                self.canvas.create_line(line, fill="red")
         return True
+
+    def exit(self):
+        return (self.__x, self.__y) == self.maze.target
