@@ -1,4 +1,6 @@
 #+title:Maze
+There are interesting algorithms about maze generation here:
 
 https://en.wikipedia.org/wiki/Maze_generation_algorithm
-Wilson algo
+
+This library uses the Kruskal algorithm so far but may add more in the future.
