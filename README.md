@@ -1,15 +1,15 @@
 
 # Table of Contents
 
-1.  [Installation](#org0a5a374)
-2.  [Basic Usage](#org5b203fc)
-    1.  [Moving around the maze](#org973cce3)
-    2.  [Escaping the maze](#orgd77c125)
-    3.  [Leaving a trace](#orge77e2aa)
-3.  [Advanced Usage](#orgd5431a0)
-    1.  [Changing Maze size](#orgd9775e2)
-    2.  [Deterministic Random Maze Creation](#org017f811)
-4.  [Technical details](#org9578c1a)
+1.  [Installation](#org655f800)
+2.  [Basic Usage](#org7686fb6)
+    1.  [Moving around the maze](#org7b7846a)
+    2.  [Escaping the maze](#org5c4ab5b)
+    3.  [Leaving a trace](#org6434377)
+3.  [Advanced Usage](#orgfa2d53d)
+    1.  [Changing Maze size](#orge2dc0ab)
+    2.  [Deterministic Random Maze Creation](#orga80957c)
+4.  [Technical details](#org300aa45)
 
 Teach your robot how to escape the maze!
 
@@ -18,14 +18,14 @@ This is a simple game library with no other dependencies than modern python.
 The aim of this library is to allow people experiment with python
 
 
-<a id="org0a5a374"></a>
+<a id="org655f800"></a>
 
 # Installation
 
     pip install git+https://github.com/noiseOnTheNet/maze_robot.git
 
 
-<a id="org5b203fc"></a>
+<a id="org7686fb6"></a>
 
 # Basic Usage
 
@@ -54,7 +54,7 @@ following command in advance:
     %gui tk
 
 
-<a id="org973cce3"></a>
+<a id="org7b7846a"></a>
 
 ## Moving around the maze
 
@@ -73,7 +73,7 @@ To get its position you can look at the &ldquo;position&rdquo; read-only attribu
     # it returns a tuple of integers e.g. (1, 2)
 
 
-<a id="orgd77c125"></a>
+<a id="org5c4ab5b"></a>
 
 ## Escaping the maze
 
@@ -94,7 +94,7 @@ around its position.
     # returns a tuple of directions where walls are e.g.(N, W, S)
 
 
-<a id="orge77e2aa"></a>
+<a id="org6434377"></a>
 
 ## Leaving a trace
 
@@ -113,19 +113,19 @@ When you want to stop littering the maze you can use `up_pen()`
     r.up_pen()
 
 
-<a id="orgd5431a0"></a>
+<a id="orgfa2d53d"></a>
 
 # Advanced Usage
 
 
-<a id="orgd9775e2"></a>
+<a id="orge2dc0ab"></a>
 
 ## Changing Maze size
 
 you can provide your own maze by using the `Maze` class
 
     from maze_robot.robot import Maze
-    maze = Maze.kruskal(rows=20,cols=10)
+    maze = Maze.kruskal(cols=20,rows=10)
     r = Robot(maze)
     r.view()
 
@@ -136,7 +136,7 @@ Have fun with larger mazes!
 Warning: the current implementation of the maze generation is not the most efficient, larger mazes may be slow to create.
 
 
-<a id="org017f811"></a>
+<a id="orga80957c"></a>
 
 ## Deterministic Random Maze Creation
 
@@ -144,12 +144,12 @@ If you want to test your algorithm on a specific maze you can provide a seed
 which will generate always the same maze.
 
     from maze_robot.robot import Maze
-    maze = Maze.kruskal(rows=20,cols=10, seed=0)
+    maze = Maze.kruskal(cols=20,rows=10, seed=0)
     r = Robot(maze)
     r.view()
 
 
-<a id="org9578c1a"></a>
+<a id="org300aa45"></a>
 
 # Technical details
 

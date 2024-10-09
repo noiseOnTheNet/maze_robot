@@ -97,7 +97,7 @@ r.up_pen()
 you can provide your own maze by using the ~Maze~ class
 #+begin_src python
 from maze_robot.robot import Maze
-maze = Maze.kruskal(rows=20,cols=10)
+maze = Maze.kruskal(cols=20,rows=10)
 r = Robot(maze)
 r.view()
 #+end_src
@@ -112,7 +112,7 @@ which will generate always the same maze.
 
 #+begin_src python
 from maze_robot.robot import Maze
-maze = Maze.kruskal(rows=20,cols=10, seed=0)
+maze = Maze.kruskal(cols=20,rows=10, seed=0)
 r = Robot(maze)
 r.view()
 #+end_src
