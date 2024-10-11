@@ -67,7 +67,7 @@ class Maze:
         self.cols = cols
         if seed is not None:
             random.seed(seed)
-        self.__target = (random.randint(0,cols), random.randint(0,rows))
+        self.__target = (random.randint(0,cols - 1), random.randint(0,rows - 1))
 
     @property
     def target(self):
